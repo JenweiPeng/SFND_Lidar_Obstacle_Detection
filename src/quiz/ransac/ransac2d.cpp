@@ -69,7 +69,52 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
 	// TODO: Fill in this function
 
 	// For max iterations 
+	while (maxIterations--) 
+	{
+		// randomly select two points from the cloud
+		// use set because the elements have to be unique
+		std::unordered_set<int> inliers;
+		while (inliers.size() < 2)
+			inliers.insert(rand() % (cloud->points.size()));
+		
+		// create float to hold the (x, y) from the inliers
+		float x1, x2, y1, y2;
 
+		// begin() points at the beginning of inliers
+		auto itr = inliers.begin();
+		// first point
+		x1 = cloud->points[itr*].x;
+		y1 = cloud->points[itr*].y;
+		// second point
+		itr++;
+		x2 = cloud->points[*itr].x;
+		y2 = cloud->points[*itr].y;
+
+		float a, b, c;
+		a = (y1 - y2);
+		b = (x2 - x1);
+		c = (x1 * y2 - x2 * y1);
+
+		for (int index = 0; index < cloud.points.size(); index++) 
+		{
+			// check if the index is in the inliers set
+			// if count() is not zero, then the index is in the inliers
+			if (inliers.count(index) > 0)
+				continue;
+		
+			pcl::PointXYZ point = cloud->points[index];
+			float x3, y3;
+			x3 = point.x;
+			y3 = point.y;
+			float distance = fabs(a * x3 + b * y3 + c) / sqrt(a * a + b * b);
+			if (distance <= distanceTol)
+				inliers.insert(index);
+		}
+		
+		// compare result
+		if (inliers.size() > inliersResult.size())
+			inliersResult = inliers;
+	}
 	// Randomly sample subset and fit line
 
 	// Measure distance between every point and fitted line
